@@ -21,9 +21,9 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Generate Android scaffold (if missing)
+      - name: Generate Android scaffold
         run: |
-          if [ ! -d android ]; then
+          if [ ! -f android/app/build.gradle ] && [ ! -f android/app/build.gradle.kts ]; then
             mkdir -p /tmp/keep
             cp -r lib pubspec.yaml assets /tmp/keep/
             flutter create --org com.akatsu --project-name akatsu_app --platforms=android .
