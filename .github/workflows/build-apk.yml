@@ -1,0 +1,41 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Generate Android scaffold (if missing)
+        run: |
+          if [ ! -d android ]; then
+            mkdir -p /tmp/keep
+            cp -r lib pubspec.yaml assets /tmp/keep/
+            flutter create --org com.akatsu --project-name akatsu_app --platforms=android .
+            rm -rf lib pubspec.yaml assets test
+            cp -r /tmp/keep/lib /tmp/keep/pubspec.yaml /tmp/keep/assets .
+          fi
+          sed -i 's/android:label="[^"]*"/android:label="AKATSU"/' android/app/src/main/AndroidManifest.xml
+
+      - run: flutter pub get
+      - run: flutter build apk --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: akatsu-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
